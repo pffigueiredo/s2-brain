@@ -19,7 +19,6 @@ export default async function handler(
   }
 
   const body = JSON.parse(req.body);
-  console.log(req.body);
 
   // check if request has a "prompt" key
   if (!body.prompt) {
@@ -29,7 +28,6 @@ export default async function handler(
 
   // check if request has a "prompt" key
   if (!body.password || body.password !== process.env.SECRET) {
-    console.log(body.password, process.env.SECRET);
     res.status(400).json({ status: 'error', message: 'Wrong secret' });
     return;
   }

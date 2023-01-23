@@ -10,8 +10,6 @@ async function fetchCompletion(
   url: string,
   { arg }: { arg: { prompt: string; password: string } }
 ): Promise<Data> {
-  console.log(arg);
-
   const response = await fetch('/api/openai', {
     method: 'POST',
     body: JSON.stringify(arg),
