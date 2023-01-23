@@ -33,6 +33,21 @@ export default function Home() {
     setPassword(password);
   }, []);
 
+  let content;
+  if (isMutating) {
+    content = <div>loading...</div>;
+  } else if (error) {
+    content = <div>Failed to load due to problems with OpenAI API</div>;
+  } else if (data?.status === 'error') {
+    content = <div>Failed to load due to {JSON.stringify(data?.message)}</div>;
+  } else if (!isMutating && data?.status === 'success') {
+    content = (
+      <div className={styles['completion-section']}>
+        {data.response.choices[0].text}
+      </div>
+    );
+  }
+
   return (
     <>
       <Head>
@@ -67,18 +82,7 @@ export default function Home() {
           </button>
         </form>
 
-        <div style={{ marginTop: '20px' }}>
-          {error && <div>Failed to load due to problems with OpenAI API</div>}
-          {data?.status === 'error' && (
-            <div>Failed to load due to {JSON.stringify(data?.message)}</div>
-          )}
-          {isMutating && <div>loading...</div>}
-          {!isMutating && data?.status === 'success' && (
-            <div className={styles['completion-section']}>
-              {data.response.choices[0].text}
-            </div>
-          )}
-        </div>
+        <div style={{ marginTop: '20px' }}>{content}</div>
       </main>
     </>
   );
