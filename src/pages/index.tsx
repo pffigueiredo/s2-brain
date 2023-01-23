@@ -68,10 +68,11 @@ export default function Home() {
         </form>
 
         <div style={{ marginTop: '20px' }}>
+          {error && <div>Failed to load due to problems with OpenAI API</div>}
           {data?.status === 'error' && (
             <div>Failed to load due to {JSON.stringify(data?.message)}</div>
           )}
-          {isMutating && <div>Is loading...</div>}
+          {isMutating && <div>loading...</div>}
           {!isMutating && data?.status === 'success' && (
             <div className={styles['completion-section']}>
               {data.response.choices[0].text}
