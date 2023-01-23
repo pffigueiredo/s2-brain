@@ -1,11 +1,40 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from '@/styles/Home.module.css'
+import Head from 'next/head';
+import { Inter } from '@next/font/google';
+import styles from '@/styles/Home.module.css';
+import { useState } from 'react';
+import useSWRMutation from 'swr/mutation';
+import { Data } from '@/pages/api/openai';
+import React from 'react';
 
-const inter = Inter({ subsets: ['latin'] })
+async function fetchCompletion(
+  url: string,
+  { arg }: { arg: { prompt: string; password: string } }
+): Promise<Data> {
+  console.log(arg);
+
+  const response = await fetch('/api/openai', {
+    method: 'POST',
+    body: JSON.stringify(arg),
+  });
+  const jsonData = response.json();
+
+  return jsonData;
+}
 
 export default function Home() {
+  const [prompt, setPrompt] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+
+  const { trigger, data, isMutating, error } = useSWRMutation(
+    '/api/openai',
+    fetchCompletion
+  );
+
+  React.useEffect(() => {
+    let password = window.prompt('Please enter the secret', 'wrong') as string;
+    setPassword(password);
+  }, []);
+
   return (
     <>
       <Head>
@@ -15,109 +44,49 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
+        <h1 className={styles['s2-heading']}>S2 Brain</h1>
 
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            trigger({ prompt, password });
+          }}
+          className={styles.section}
+        >
+          <textarea
+            required
+            maxLength={100}
+            onInput={(e) => setPrompt(e.currentTarget.value)}
+            className={styles['prompt-input']}
+            placeholder="Prompt..."
           />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
-            />
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            disabled={isMutating}
+            style={{ opacity: isMutating ? '0.5' : 1 }}
+            className={styles['submit-button']}
           >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
+            Go!
+          </button>
+        </form>
 
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
+        <div style={{ marginTop: '20px' }}>
+          {data?.status === 'error' && (
+            <div>Failed to load due to {JSON.stringify(data?.message)}</div>
+          )}
+          {isMutating && <div>Is loading...</div>}
+          {!isMutating && data?.status === 'success' && (
+            <div className={styles['completion-section']}>
+              {data.response.choices[0].text}
+            </div>
+          )}
         </div>
       </main>
     </>
-  )
+  );
+}
+function useSWR(
+  arg0: string,
+  fetcher: any
+): { data: any; error: any; isLoading: any } {
+  throw new Error('Function not implemented.');
 }
